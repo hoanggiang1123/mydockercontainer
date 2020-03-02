@@ -1,0 +1,84 @@
+version: "3"
+
+#NETWORK
+networks:
+    mynetwork:
+        driver: bridge
+
+#SERVICES
+services:
+    #container php
+    myphp:
+        container_name: php
+        build:
+            context: ./php
+            dockerfile: Dockerfile
+        hostname: php
+        restart: always
+        networks:
+            - mynetwork
+        volumes:
+            -  ./src/:/home/site/
+        
+    #container nginx
+    mynginx:
+        container_name: nginx
+        image: nginx:latest
+        hostname: nginx
+        restart: always
+        networks:
+            -  mynetwork
+        volumes:
+            - ./src/:/home/site/
+            - ./nginx/conf.d/:/etc/nginx/conf.d/
+        ports:
+            - "9999:80"
+            - "443:443"
+    #container mysql
+    mysql:
+        container_name: mysql
+        image: mysql:5.6
+        hostname: mysql
+        restart: always
+        networks:
+            - mynetwork
+        volumes:
+            -  ./mysql/db/:/var/lib/mysql/
+            -  ./mysql/conf/my.cnf:/etc/mysql/my.cnf
+        environment:
+            - MYSQL_ROOT_PASSWORD=abc123
+            - MYSQL_DATABASE=mydb
+            - MYSQL_USER=hgadmin
+            - MYSQL_PASSWORD=abc123
+    #container phpmyadmin
+    myphpadmin:
+        container_name: phpmyadmin
+        image: phpmyadmin/phpmyadmin
+        networks: 
+            - mynetwork
+        restart: always
+        ports:
+            - "9000:80"
+        environment: 
+            PMA_HOST: mysql
+            MYSQL_ROOT_PASSWORD: abc123
+    #container nodejs
+    mynodejs:
+        container_name: nodejs
+        image: node:12.16.1
+        networks: 
+            - mynetwork
+        restart: always
+        ports:
+            - "8080:8080"
+        volumes:
+            - ./src/:/home/site/
+            - ./src/counter/:/home/site/counter/
+        working_dir: /home/site/counter/
+        command: npm run dev
+        
+        
+        
+        
+
+
